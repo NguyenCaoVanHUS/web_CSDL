@@ -1,4 +1,3 @@
-
 var map, geojson, featureOverlay, overlays, style;
 var selected, features, layer_name, layerControl;
 var content;
@@ -7,13 +6,13 @@ var selectedFeature;
 
 var view = new ol.View({
     projection: 'EPSG:4326',
-    center: [82.00, 23.00],
-    zoom: 5,
+    center: [106.36, 10.40],
+    zoom: 10,
 
 });
 var view_ov = new ol.View({
     projection: 'EPSG:4326',
-    center: [19.98, 42.90],
+    center: [106.36, 10.40],
     zoom: 7,
 });
 
@@ -51,14 +50,29 @@ var OSM = new ol.layer.Tile({
     title: 'OSM',
 });
 
+overlays2 = new ol.layer.Group({
+    'title': 'Dữ liệu hành chính',
+    layers: [
+        new ol.layer.Image({
+            title: 'plg_rghuyen_wgs84',
+            // extent: [-180, -90, -180, 90],
+            source: new ol.source.ImageWMS({
+                url: 'http://localhost:8080/geoserver/wms',
+                params: { 'LAYERS': 'CSDLhanhlang:plg_rghuyen_wgs84' },
+                ratio: 1,
+                serverType: 'geoserver'
+            })
+        }),
+    ]
+});
 overlays = new ol.layer.Group({
-    'title': 'Overlays',
+    'title': 'Dữ liệu khí tượng thủy văn',
     layers: [
         new ol.layer.Image({
             title: 'l_hltiengiang',
             // extent: [-180, -90, -180, 90],
             source: new ol.source.ImageWMS({
-                url: 'localhost:8080/geoserver/wms',
+                url: 'http://localhost:8080/geoserver/wms',
                 params: { 'LAYERS': 'CSDLhanhlang:l_hltiengiang' },
                 ratio: 1,
                 serverType: 'geoserver'
@@ -66,6 +80,7 @@ overlays = new ol.layer.Group({
         }),
     ]
 });
+
 
 /*var ind_state = new ol.layer.Image({
             title: 'india_state',
@@ -83,12 +98,14 @@ overlays = new ol.layer.Group({
 map = new ol.Map({
     target: 'map',
     view: view,
-    //overlays: [overlay]
+    // overlays: [overlay]
 });
 
 
 map.addLayer(base_maps);
+map.addLayer(overlays2);
 map.addLayer(overlays);
+
 //overlays.getLayers().push(ind_state);
 var popup = new Popup();
 map.addOverlay(popup);
@@ -169,7 +186,7 @@ function scale() {
     } else {
         scale = Math.round(scale);
     }
-    document.getElementById('scale_bar1').innerHTML = "Scale = 1 : " + scale;
+    document.getElementById('scale_bar1').innerHTML = "Tỉ lệ = 1 : " + scale;
 }
 scale();
 
@@ -187,7 +204,7 @@ function legend() {
 
     var head = document.createElement("h8");
 
-    var txt = document.createTextNode("Legend");
+    var txt = document.createTextNode("Ghi chú");
 
     head.appendChild(txt);
     var element = document.getElementById("legend");
@@ -207,9 +224,23 @@ function legend() {
         img.src = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=" + layer.get('title');
         var src = document.getElementById("legend");
         src.appendChild(img);
+        console.log(img.src);
+    });
+    overlays2.getLayers().getArray().slice().forEach(layer => {
+
+        var head = document.createElement("p");
+
+        var txt = document.createTextNode(layer.get('title'));
+        //alert(txt[i]);
+        head.appendChild(txt);
+        var element = document.getElementById("legend");
+        element.appendChild(head);
+        var img = new Image();
+        img.src = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=" + layer.get('title');
+        var src = document.getElementById("legend");
+        src.appendChild(img);
 
     });
-
 
 
 }
@@ -254,7 +285,7 @@ $(function () {
         var value_layer = $(this).val();
 
 
-        attributes.options[0] = new Option('Select attributes', "");
+        attributes.options[0] = new Option('Chọn thuộc tính', "");
         //  alert(url);
 
         $(document).ready(function () {
@@ -301,17 +332,17 @@ $(function () {
         var value_type = $(this).val();
         // alert(value_type);
         var value_attribute = $('#attributes option:selected').text();
-        operator.options[0] = new Option('Select operator', "");
+        operator.options[0] = new Option('Chọn phương pháp tính', "");
 
         if (value_type == 'xsd:short' || value_type == 'xsd:int' || value_type == 'xsd:double' || value_type == 'xsd:long') {
             var operator1 = document.getElementById("operator");
-            operator1.options[1] = new Option('Greater than', '>');
-            operator1.options[2] = new Option('Less than', '<');
-            operator1.options[3] = new Option('Equal to', '=');
-            operator1.options[4] = new Option('Between', 'BETWEEN');
+            operator1.options[1] = new Option('Lớn hơn', '>');
+            operator1.options[2] = new Option('Nhỏ hơn', '<');
+            operator1.options[3] = new Option('Bằng', '=');
+            operator1.options[4] = new Option('Giữa', 'BETWEEN');
         } else if (value_type == 'xsd:string') {
             var operator1 = document.getElementById("operator");
-            operator1.options[1] = new Option('Like', 'ILike');
+            operator1.options[1] = new Option('Giống', 'ILike');
 
         }
 
@@ -492,7 +523,7 @@ function query() {
         var caption = document.createElement("caption");
         caption.setAttribute("id", "caption");
         caption.style.captionSide = 'top';
-        caption.innerHTML = value_layer + " (Number of Features : " + data.features.length + " )";
+        caption.innerHTML = value_layer + " (Số lượng đối tượng: " + data.features.length + " )";
         table.appendChild(caption);
 
 
@@ -533,7 +564,7 @@ function query() {
 
 
         document.getElementById('map').style.height = '71%';
-        document.getElementById('table_data').style.height = '29%';
+        document.getElementById('table_data').style.height = '21%';
         map.updateSize();
         addRowHandlers();
 
@@ -735,7 +766,7 @@ function wms_layers() {
             success: function (xml) {
                 $('#table_wms_layers').empty();
                 // console.log("here");
-                $('<tr></tr>').html('<th>Name</th><th>Title</th><th>Abstract</th>').appendTo('#table_wms_layers');
+                $('<tr></tr>').html('<th>Tên</th><th>Tiêu đề</th><th>Tóm tắt nội dung</th>').appendTo('#table_wms_layers');
                 $(xml).find('Layer').find('Layer').each(function () {
                     var name = $(this).children('Name').text();
                     // alert(name);
@@ -770,7 +801,7 @@ function wms_layers() {
             // Take each cell
             var head = heads[i];
             //alert(head.innerHTML);
-            if (head.innerHTML == 'Name') {
+            if (head.innerHTML == 'Tên') {
                 col_no = i + 1;
                 //alert(col_no);
             }
@@ -873,15 +904,15 @@ function close_wms_window() {
 }
 // function on click of getinfo
 function info() {
-    if (document.getElementById("info_btn").innerHTML == "☰ Activate GetInfo") {
+    if (document.getElementById("info_btn").innerHTML == "☰ Bật xem thông tin") {
 
-        document.getElementById("info_btn").innerHTML = "☰ De-Activate GetInfo";
+        document.getElementById("info_btn").innerHTML = "☰ Tắt xem thông tin";
         document.getElementById("info_btn").setAttribute("class", "btn btn-danger btn-sm");
         map.on('singleclick', getinfo);
     } else {
 
         map.un('singleclick', getinfo);
-        document.getElementById("info_btn").innerHTML = "☰ Activate GetInfo";
+        document.getElementById("info_btn").innerHTML = "☰ Bật xem thông tin";
         document.getElementById("info_btn").setAttribute("class", "btn btn-success btn-sm");
         if (popup) {
             popup.hide();
@@ -976,7 +1007,7 @@ function clear_all() {
     });
 
 
-    document.getElementById("query_panel_btn").innerHTML = "☰ Open Query Panel";
+    document.getElementById("query_panel_btn").innerHTML = "☰ Mở Bảng truy vấn";
     document.getElementById("query_panel_btn").setAttribute("class", "btn btn-success btn-sm");
 
     document.getElementById("query_tab").style.width = "0%";
@@ -985,14 +1016,14 @@ function clear_all() {
     document.getElementById("query_tab").style.visibility = "hidden";
     document.getElementById('table_data').style.left = '0%';
 
-    document.getElementById("legend_btn").innerHTML = "☰ Show Legend";
+    document.getElementById("legend_btn").innerHTML = "☰ Hiển thị ghi chú";
     document.getElementById("legend").style.width = "0%";
     document.getElementById("legend").style.visibility = "hidden";
     document.getElementById('legend').style.height = '0%';
 
     map.un('singleclick', getinfo);
     map.un('singleclick', highlight);
-    document.getElementById("info_btn").innerHTML = "☰ Activate GetInfo";
+    document.getElementById("info_btn").innerHTML = "☰ Bật xem thông tin";
     document.getElementById("info_btn").setAttribute("class", "btn btn-success btn-sm");
     map.updateSize();
 
@@ -1036,7 +1067,7 @@ function show_hide_querypanel() {
 
     if (document.getElementById("query_tab").style.visibility == "hidden") {
 
-        document.getElementById("query_panel_btn").innerHTML = "☰ Hide Query Panel";
+        document.getElementById("query_panel_btn").innerHTML = "☰ Ẩn bảng truy vấn";
         document.getElementById("query_panel_btn").setAttribute("class", "btn btn-danger btn-sm");
         document.getElementById("query_tab").style.visibility = "visible";
         document.getElementById("query_tab").style.width = "21%";
@@ -1046,7 +1077,7 @@ function show_hide_querypanel() {
         document.getElementById('table_data').style.left = '21%';
         map.updateSize();
     } else {
-        document.getElementById("query_panel_btn").innerHTML = "☰ Open Query Panel";
+        document.getElementById("query_panel_btn").innerHTML = "☰ Mở bảng truy vấn";
         document.getElementById("query_panel_btn").setAttribute("class", "btn btn-success btn-sm");
         document.getElementById("query_tab").style.width = "0%";
         document.getElementById("map").style.width = "100%";
@@ -1062,7 +1093,7 @@ function show_hide_legend() {
 
     if (document.getElementById("legend").style.visibility == "hidden") {
 
-        document.getElementById("legend_btn").innerHTML = "☰ Hide Legend";
+        document.getElementById("legend_btn").innerHTML = "☰ Tắt ghi chú";
         document.getElementById("legend_btn").setAttribute("class", "btn btn-danger btn-sm");
 
         document.getElementById("legend").style.visibility = "visible";
@@ -1072,7 +1103,7 @@ function show_hide_legend() {
         map.updateSize();
     } else {
         document.getElementById("legend_btn").setAttribute("class", "btn btn-success btn-sm");
-        document.getElementById("legend_btn").innerHTML = "☰ Show Legend";
+        document.getElementById("legend_btn").innerHTML = "☰ Bật ghi chú";
         document.getElementById("legend").style.width = "0%";
         document.getElementById("legend").style.visibility = "hidden";
         document.getElementById('legend').style.height = '0%';
@@ -1354,7 +1385,7 @@ measuretype.onchange = function () {
 
 
     map.un('singleclick', getinfo);
-    document.getElementById("info_btn").innerHTML = "☰ Activate GetInfo";
+    document.getElementById("info_btn").innerHTML = "☰ Bật xem thông tin";
     document.getElementById("info_btn").setAttribute("class", "btn btn-success btn-sm");
     if (popup) {
         popup.hide();

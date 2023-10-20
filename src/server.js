@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from "express";
+import cors from "cors";
 import viewEngine from "./config/viewEngine";
 import initWebRoutes from "./routes/web";
 import bodyParser from "body-parser";
@@ -8,9 +9,10 @@ import session from "express-session";
 import passport from "passport";
 import { join } from 'mysql2/lib/constants/charset_encodings';
 import ejs from 'ejs';
+
 let app = express();
 
-
+app.use(cors());
 app.use(cookieParser("secret"));
 
 //config session
@@ -25,6 +27,7 @@ app.use(session({
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 
 // config view engine
 viewEngine(app);
