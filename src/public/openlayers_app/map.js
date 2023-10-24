@@ -920,6 +920,7 @@ function info() {
     }
 }
 
+
 // getinfo function
 function getinfo(evt) {
 
@@ -967,9 +968,43 @@ function getinfo(evt) {
 
             });
         }
+    });
+    overlays2.getLayers().getArray().slice().forEach(layer => {
+        var visibility = layer.getVisible();
+        console.log(visibility);
+        if (visibility == true) {
+
+            var layer_title = layer.get('title');
+            var wmsSource = new ol.source.ImageWMS({
+                url: 'http://localhost:8080/geoserver/wms',
+                params: {
+                    'LAYERS': layer_title
+                },
+                serverType: 'geoserver',
+                crossOrigin: 'anonymous'
+            });
+
+            var url = wmsSource.getFeatureInfoUrl(
+                evt.coordinate, viewResolution, 'EPSG:4326', {
+                'INFO_FORMAT': 'text/html'
+            });
+            // alert(url[i]);
+            //console.log(url);
+
+            //assuming you use jquery
+            $.get(url, function (data) {
+
+                // $("#popup-content").append(data);
+                //document.getElementById('popup-content').innerHTML = '<p>Feature Info</p><code>' + data + '</code>';
+                content += data;
+                // overlay.setPosition(coordinate);
+                popup.show(evt.coordinate, content);
+
+
+            });
+        }
 
     });
-
 }
 
 
